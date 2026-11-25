@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota Peças busca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday parts store: direct, quick, the counter of a good auto shop
+   IDEA the store shelf: every part drawn as its own boxed product, the customer's car on the ticket
+   PICTURE the customer's car with its plate, and a hand-drawn illustration for each of the 30 part types
+   COLOUR charcoal band, warm white ground, signal orange accent, steel greys for the metal
+   TYPE Barlow Condensed 700 display + Barlow text
+   LAYOUT laptop: search left, garage right, category shelf, filters + product grid; phone: title, search, garage, shelf, grid */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1012);--ink:light-dark(#15171a,#eceae6);--mute:light-dark(#5d636b,#a2a7ad);--panel:light-dark(#f5f4f1,#1a1c1f);--panel2:light-dark(#e9e6e0,#25282c);--line:light-dark(#e3e0db,#2c2f33);--band:#15171a;--acc:#ff5a1f;--acc2:#c8410f;--acc-ink:light-dark(#b8380a,#ff7a45);--ok:light-dark(#1d7a3c,#5fcf86);--okbg:light-dark(#e3f3e8,#173222);--warn:light-dark(#8f5200,#f0b45a);--warnbg:light-dark(#fcefdc,#33270f);
+  --k1:light-dark(#2b3037,#6b737d);--k2:light-dark(#7d8590,#a3abb5);--k3:light-dark(#bcc3cb,#cfd5dc);--k4:light-dark(#f3f4f6,#eef1f4)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;line-height:1.05;letter-spacing:-.01em;margin:0;text-wrap:balance}
+button,input,select{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:max(4vw,16px)}
+.top{background:#0c0d0f;color:#f2f0ec}
+.top .wrap{display:flex;align-items:center;gap:14px;min-height:66px;padding-block:8px}
+.logo{white-space:nowrap;display:flex;align-items:center;gap:10px;font:700 28px/1 "Barlow Condensed",sans-serif;color:#fff;text-decoration:none;margin-right:auto}
+.logo small{font:500 13px Barlow,sans-serif;color:#9aa0a6;display:block;margin-top:3px}
+.tbtn{display:flex;align-items:center;gap:8px;background:#1b1e22;border:1px solid #30343a;color:#f2f0ec;border-radius:999px;padding:8px 16px;min-height:44px;white-space:nowrap}
+.tbtn:hover{border-color:var(--acc)}
+.tbtn b{color:var(--acc)}
+.stripe{height:6px;background:repeating-linear-gradient(135deg,var(--acc) 0 14px,#15171a 14px 28px)}
+.hero{background:radial-gradient(120% 140% at 100% 0%,#2a2e34 0%,#15171a 55%);color:#f2f0ec}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(22px,4vw,56px);padding-block:clamp(28px,4.5vw,60px);align-items:center}
+.hero h1{font-size:clamp(38px,4.8vw,58px)}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.lead{color:#b9bdc2;font-size:18px;margin:14px 0 0;max-width:46ch}
+.sbw{position:relative;margin-top:24px}
+form.sb{display:flex;background:#fff;border-radius:14px;padding:5px;box-shadow:0 0 0 1px #ffffff20,0 14px 30px #0006}
+form.sb svg{flex:none;align-self:center;margin-left:12px}
+form.sb input{flex:1;border:0;padding:14px 12px;font-size:18px;color:#15171a;background:transparent;outline:none}
+form.sb button{background:var(--acc);color:#15171a;border:0;border-radius:10px;padding:0 26px;font-weight:700;font-size:17px;min-height:54px}
+form.sb button:hover{background:#ff7440}
+form.sb:focus-within{box-shadow:0 0 0 3px var(--acc),0 14px 30px #0006}
+.ac{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;color:#15171a;border-radius:14px;box-shadow:0 18px 40px #0007;z-index:15;overflow:hidden;display:none;padding-block:6px}
+.ac.on{display:block}
+.ac .grp{font-size:13px;color:#6b7178;padding:8px 16px 2px;font-weight:600}
+.ac button{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:none;border:0;padding:8px 16px;color:#15171a;min-height:46px}
+.ac button svg{width:30px;height:30px;flex:none;--k1:#2b3037;--k2:#7d8590;--k3:#bcc3cb;--k4:#f3f4f6}
+.ac button span{flex:1}
+.ac button small{color:#6b7178;white-space:nowrap}
+.ac button.sel,.ac button:hover{background:#fff1ea}
+.ac mark{background:none;color:#b8380a;font-weight:700}
+.pop{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.pop>span{font-size:14px;color:#9aa0a6;margin-right:2px}
+.pop button{background:#ffffff0d;border:1px solid #ffffff26;color:#e4e6e8;border-radius:999px;padding:6px 13px;font-size:14px;min-height:36px}
+.pop button:hover{border-color:var(--acc);color:#fff}
+.pop button i{font-style:normal;font-size:12px;color:#ff9e78;margin-left:7px;font-weight:600}
+.pop .limpa{background:none;border:0;color:#9aa0a6;text-decoration:underline;padding:6px 4px}
+.und{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;min-height:32px}
+.tag{display:inline-flex;align-items:center;gap:6px;border-radius:6px;padding:4px 10px;font-size:14px;background:#ff5a1f1f;color:#ffd2bf;border:1px solid #ff5a1f55}
+.tag i{font-style:normal;color:#ff9e78}
+.garage{background:#1b1d21;color:#f2f0ec;border:1px solid #34383f;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px #000b,0 0 0 1px #00000040;display:grid}
+.gtop{padding:16px 18px 12px;display:grid;gap:12px;background:linear-gradient(#24272c,#1b1d21)}
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ghead h2{font-size:27px;display:flex;align-items:center;gap:10px}
+.ghead h2 svg{color:var(--acc);background:#ff5a1f1f;border-radius:10px;padding:6px;width:36px;height:36px}
+.gstat{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#aeb3b8;background:#2b2f35;border-radius:999px;padding:4px 11px;white-space:nowrap}
+.gstat::before{content:"";width:8px;height:8px;border-radius:50%;background:#7b8189}
+.gstat.on{color:#8be3a9;background:#163021}.gstat.on::before{background:#3ccf6e;box-shadow:0 0 0 3px #3ccf6e33}
+.gtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:#141518;border:1px solid #2c3036;border-radius:14px;padding:5px}
+.gtabs[hidden]{display:none}
+.gtab{flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;background:none;border:0;color:#b9bdc2;border-radius:10px;padding:6px 12px 6px 8px;min-height:42px;font-weight:600}
+.gtab small{color:inherit;opacity:.65;font-weight:500}
+.gtab:hover{background:#25282d;color:#fff}
+.gtab.on{background:#f4f2ee;color:#15171a;box-shadow:0 2px 8px #0006}
+.gtab.add{width:42px;justify-content:center;padding:0;font-size:22px;font-weight:400;color:#ff9e78;border:1px dashed #4a4f57;margin-left:auto}
+.gtab.add:hover{border-color:var(--acc);background:#ff5a1f14}
+.stage{position:relative;height:clamp(188px,18vw,224px);overflow:hidden;background:#2c3036;border-block:1px solid #2c3036}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.stage svg .carro{animation:entra .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes entra{from{transform:translateX(-26px);opacity:.3}}
+@media(prefers-reduced-motion:reduce){.stage svg .carro{animation:none}}
+.gbody{padding:14px 18px 18px;display:grid;gap:14px}
+.cores{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cores[hidden]{display:none}
+.cores span{font-size:14px;color:#9aa0a6}.cores span b{color:#f2f0ec;font-weight:600}
+.cores div{display:flex;gap:6px}
+.cor{width:28px;height:28px;border-radius:50%;border:2px solid #ffffff2a;padding:0;box-shadow:inset 0 -4px 6px #0003;transition:transform .15s}
+.cor:hover{transform:scale(1.1)}
+.cor.on{border-color:#fff;box-shadow:0 0 0 2px var(--acc),inset 0 -4px 6px #0003}
+.vrow{display:flex;justify-content:space-between;align-items:end;gap:12px}
+.vtitle{font:700 36px/1 "Barlow Condensed",sans-serif}
+.vtitle small{display:block;font:600 13px Barlow,sans-serif;color:var(--acc);margin-bottom:5px;letter-spacing:.02em}
+.vbtns{display:flex;gap:6px}
+.ibtn{width:42px;height:42px;display:grid;place-items:center;background:#25282d;border:1px solid #363a41;color:#cfd2d6;border-radius:11px}
+.ibtn:hover{border-color:var(--acc);color:#fff}
+#gdel:hover{border-color:#e0313f;color:#ff8a94}
+.vspecs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:#2f333a;border:1px solid #2f333a;border-radius:12px;overflow:hidden}
+.vspecs div{background:#22252a;padding:9px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;align-items:center}
+.vspecs svg{grid-row:span 2;color:var(--acc)}
+.vspecs span{font-size:12.5px;color:#9aa0a6;line-height:1.2}
+.vspecs b{font-size:15px;font-weight:600;line-height:1.25}
+.glbl{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#9aa0a6;font-weight:600;margin-bottom:-6px}
+.gcats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gcat{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;background:#22252a;border:1px solid #33373e;color:#eceae6;border-radius:12px;padding:6px 10px 6px 6px;min-height:46px;font-size:14px;text-align:left}
+.gcat span{font-size:13.5px;line-height:1.15;font-weight:500}
+.gcat:hover{border-color:var(--acc);background:#26292f}
+.gcat svg{width:32px;height:32px;background:#f1efeb;border-radius:9px;--k1:#2b3037;--k2:#7d8590;--k3:#bcc3cb;--k4:#fff}
+.gcat b{display:block;color:var(--acc);font-size:13px;font-weight:700;margin-top:2px}
+.gkit{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;text-align:left;background:linear-gradient(100deg,#ff5a1f,#ff7a3d);color:#15171a;border:0;border-radius:14px;padding:10px 14px 10px 10px;box-shadow:0 10px 24px #ff5a1f33;transition:transform .15s}
+.gkit:hover{transform:translateY(-1px)}
+.gkit svg{width:46px;height:46px;background:#fff;border-radius:11px;padding:2px;--k1:#2b3037;--k2:#7d8590;--k3:#bcc3cb;--k4:#fff}
+.gkit b{display:block;font:700 20px/1.1 "Barlow Condensed",sans-serif}
+.gkit small{font-size:13px;font-weight:500;opacity:.85}
+.gk2{text-align:right}.gk2 b{font-size:24px;white-space:nowrap}
+.gbtn{background:var(--acc);color:#15171a;border:0;border-radius:10px;min-height:46px;padding:0 16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.gbtn:hover{background:#ff7440}
+.gbtn:disabled{opacity:.45;cursor:not-allowed}
+.gempty{color:#b9bdc2;margin:0}
+.gform{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end;background:#141518;border:1px solid #2c3036;border-radius:14px;padding:12px}
+.gform[hidden]{display:none}
+.gform label{font-size:13px;color:#9aa0a6;display:grid;gap:4px;font-weight:600}
+.gform select{background:#22252a;color:#f2f0ec;border:1px solid #3a3f46;border-radius:10px;padding:10px 8px;font-size:16px;min-height:46px;width:100%}
+.gform select:disabled{opacity:.5}
+.lnk{background:none;border:0;color:#ff9e78;font-weight:600;text-decoration:underline;padding:8px 4px;min-height:44px}
+.lnk.sm{min-height:32px;padding:4px;font-size:14px}
+.rail{background:var(--panel);border-bottom:1px solid var(--line)}
+.rail .wrap{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px;padding-block:20px}
+.cat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;color:var(--ink);text-align:center;transition:border-color .15s,transform .15s,box-shadow .15s}
+.cat .ic{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 50% 35%,var(--panel),var(--panel2));display:grid;place-items:center}
+.cat svg{width:48px;height:48px}
+.cat b{font-size:14px;font-weight:600;line-height:1.2}
+.cat small{font-size:13px;color:var(--mute)}
+.cat:hover{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 8px 18px color-mix(in srgb,var(--ink) 8%,transparent)}
+.cat.on{border-color:var(--acc);box-shadow:inset 0 -4px 0 var(--acc)}
+.main .wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;padding-block:30px}
+aside.flt{display:grid;gap:14px;align-content:start;position:sticky;top:12px}
+.flt h3{font-size:19px;margin-bottom:6px}
+.flt .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.ck{display:flex;align-items:center;gap:10px;padding:5px 0;cursor:pointer;font-size:15px}
+.ck input{width:18px;height:18px;accent-color:var(--acc);flex:none}
+.ck small{margin-left:auto;color:var(--mute);font-variant-numeric:tabular-nums}
+.scrollbox{max-height:236px;overflow-y:auto;padding-right:4px}
+.flt input[type=range]{width:100%;accent-color:var(--acc);min-height:32px}
+.flt select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;min-height:44px}
+.clrf{width:100%;background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;min-height:44px}
+.rhead{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.rhead h2{font-size:clamp(28px,3vw,38px)}
+.rhead p{margin:4px 0 0;color:var(--mute)}
+.mobf{display:none;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:10px;min-height:44px;padding:0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:16px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.card:hover,.card:focus-visible{border-color:color-mix(in srgb,var(--acc) 60%,var(--line));box-shadow:0 12px 26px color-mix(in srgb,var(--ink) 10%,transparent);transform:translateY(-2px);outline:none}
+.thumb{background:radial-gradient(circle at 50% 38%,var(--bg) 0,var(--panel) 45%,var(--panel2) 100%);border-radius:12px;height:136px;display:grid;place-items:center;position:relative}
+.thumb svg{width:104px;height:104px;transition:transform .2s}
+.card:hover .thumb svg{transform:scale(1.06) rotate(-2deg)}
+.badge{position:absolute;left:8px;top:8px;font-size:13px;font-weight:600;border-radius:6px;padding:2px 8px}
+.badge.ok{background:var(--okbg);color:var(--ok)}
+.badge.no{background:var(--warnbg);color:var(--warn)}
+.badge.un{background:var(--bg);color:var(--mute)}
+.fab{position:absolute;right:8px;bottom:8px;font-size:13px;font-weight:700;background:var(--bg);color:var(--ink);border-radius:6px;padding:1px 8px;border:1px solid var(--line)}
+.cbody{padding:2px 4px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font:600 17px/1.25 Barlow,sans-serif;letter-spacing:0}
+.meta{font-size:13px;color:var(--mute)}
+.stock{font-size:13px;color:var(--ok);font-weight:600}
+.stock.low{color:var(--warn)}
+.buy{display:flex;justify-content:space-between;align-items:end;margin-top:auto;gap:8px;padding-top:4px}
+.price{font:700 26px/1 "Barlow Condensed",sans-serif;white-space:nowrap}
+.inst{display:block;font:400 13px Barlow,sans-serif;color:var(--mute);margin-top:3px;white-space:nowrap}
+.add{background:var(--band);color:#fff;border:0;border-radius:10px;width:46px;height:46px;display:grid;place-items:center;flex:none}
+.add:hover{background:var(--acc);color:#15171a}
+.addw{background:var(--acc);color:#15171a;border:0;border-radius:12px;min-height:52px;font-weight:700;font-size:17px}
+.empty{background:var(--panel);border-radius:16px;padding:28px;grid-column:1/-1}
+.empty h3{font-size:26px;margin-bottom:6px}
+.more[hidden]{display:none}
+.more{display:block;margin:22px auto 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:12px;min-height:48px;padding:0 24px;font-weight:600}
+.tech{background:var(--panel);border-top:1px solid var(--line)}
+.tech .wrap{padding-block:22px}
+.tech summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.tech .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:12px}
+pre{background:#15171a;color:#e6e3de;border-radius:10px;padding:14px;font-size:13px;line-height:1.5;overflow-x:auto;margin:0}
+.codehead{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;gap:10px}
+.copy{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;min-height:38px;padding:0 12px}
+.note{font-size:14px;color:var(--mute)}
+footer{background:#0c0d0f;color:#aeb3b8;font-size:14px}
+footer .wrap{display:grid;grid-template-columns:1.4fr repeat(3,minmax(0,1fr));gap:24px;padding-block:32px}
+footer b{color:#f2f0ec;display:block;margin-bottom:6px}
+footer ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+footer .bot{grid-column:1/-1;border-top:1px solid #26292e;padding-top:16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.drawer{position:fixed;inset:0;background:#0009;display:none;justify-content:flex-end;z-index:20}
+.drawer.on{display:flex}
+.dpanel{background:var(--bg);width:min(480px,100%);height:100%;overflow-y:auto;padding:22px;display:grid;gap:14px;align-content:start}
+.dpanel h2{font-size:32px}
+.thumb img.foto{width:86%;height:86%;object-fit:contain;border-radius:8px}
+.thumb:has(img.foto){background:#fff}
+.ci img.foto{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:6px}
+.dpanel .thumb{height:200px}.dpanel .thumb svg{width:150px;height:150px}
+.x{justify-self:end;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;min-height:42px;padding:0 14px}
+.ftab{width:100%;border-collapse:collapse;font-size:15px}
+.ftab td{border-bottom:1px solid var(--line);padding:8px 4px;vertical-align:top}
+.ftab td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ftab tr.hl td{color:var(--ok);font-weight:600}
+.cartl{display:grid;gap:10px}
+.ci{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px}
+.ci svg{width:44px;height:44px}
+.ci button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;min-height:36px;padding:0 10px;margin-top:4px}
+.tot{display:flex;justify-content:space-between;font:700 26px "Barlow Condensed",sans-serif}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--band);color:#fff;padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:calc(100% - 32px)}
+.toast.on{opacity:1}
+.load{grid-column:1/-1;color:var(--mute);padding:30px 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(max-width:1100px){.rail .wrap{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:900px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.main .wrap{grid-template-columns:minmax(0,1fr)}aside.flt{position:static;display:none}aside.flt.open{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.mobf{display:inline-flex;align-items:center}.tech .cols{grid-template-columns:minmax(0,1fr)}footer .wrap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.logo{font-size:22px}.logo svg{width:30px;height:30px}.ghead h2{font-size:23px}.vtitle{font-size:30px}.gform{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.gform .gbtn{grid-column:1/-1}.vspecs{grid-template-columns:repeat(2,minmax(0,1fr))}.gcats{grid-template-columns:repeat(2,minmax(0,1fr))}.gk2 small{display:none}.logo small{display:none}.tbtn{padding:8px 12px}.tbtn .lb{display:none}.lead{font-size:16px}.rail .wrap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:16px}.cat{flex:0 0 106px;scroll-snap-align:start}form.sb input{font-size:16px;padding:12px 6px}form.sb button{padding:0 16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.thumb{height:112px}.thumb svg{width:84px;height:84px}.price{font-size:22px}.badge{font-size:12px;padding:1px 6px}.fab{display:none}}
+@media(max-width:380px){.grid{grid-template-columns:minmax(0,1fr)}}
+button.tag{font:inherit;cursor:pointer}
+.tag.salvar{background:var(--acc);color:#15171a;border-color:var(--acc);font-weight:700}
+.qty{display:flex;align-items:center;gap:6px;margin-top:4px}
+.qty button{margin:0}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#inicio" aria-label="Rota Peças, início"><svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" fill="#ff5a1f"/><circle cx="18" cy="18" r="10" fill="none" stroke="#15171a" stroke-width="3.5"/><circle cx="18" cy="18" r="3.5" fill="#15171a"/><path d="M18 2v6M18 28v6M2 18h6M28 18h6" stroke="#15171a" stroke-width="3"/></svg><span>Rota Peças<small>Autopeças para o seu carro</small></span></a>
+  <button class="tbtn" id="login" type="button" aria-label="Minha conta"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Entrar</span></button>
+<button class="tbtn" id="gchip" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14l2-5.5A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.9 1.5L21 14v4h-2.5M5.5 18H3v-4h18M8 18h8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="18" r="1.8" fill="currentColor"/><circle cx="17" cy="18" r="1.8" fill="currentColor"/></svg><span class="lb">Meu veículo:</span> <b id="gname">escolher</b></button>
+  <button class="tbtn" id="cartb" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11h11l2-8H6.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></svg><span class="lb">Carrinho</span><b id="ccount">0</b></button>
+</div></header>
+<div class="stripe" aria-hidden="true"></div>
+
+<section class="hero" id="inicio"><div class="wrap">
+  <div>
+    <h1>A peça certa para o <em>seu carro</em>, na primeira busca</h1>
+    <p class="lead">Escreva o nome da peça, a marca ou o código. Coloque o carro e o ano na frase ou escolha na garagem.</p>
+    <div class="sbw">
+      <form class="sb" id="sb" role="search" autocomplete="off">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="#6b7178" stroke-width="2.4"/><path d="M15.5 15.5L21 21" stroke="#6b7178" stroke-width="2.4"/></svg>
+        <input id="q" type="search" role="combobox" aria-expanded="false" aria-controls="ac" aria-label="Buscar peças" placeholder="Ex.: pastilha de freio onix 2019">
+        <button type="submit">Buscar</button>
+      </form>
+      <div class="ac" id="ac" role="listbox"></div>
+    </div>
+    <div class="pop" id="pop"></div>
+    <div class="und" id="und" aria-live="polite"></div>
+  </div>
+  <div class="garage" id="garage">
+    <div class="gtop">
+      <div class="ghead"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11L12 4l9 7v9H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 20v-7h10v7M7 15.5h10M7 18h10" stroke="currentColor" stroke-width="1.6"/></svg>Minha garagem</h2><span class="gstat" id="gstat">Sem veículo</span></div>
+      <div class="gtabs" id="gtabs" role="group" aria-label="Carros salvos"></div>
+    </div>
+    <div class="stage"><svg id="car" viewBox="0 0 640 250" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Carro selecionado"></svg></div>
+    <div class="gbody">
+      <div class="cores" id="cores" role="radiogroup" aria-label="Cor do carro"></div>
+      <div id="gview" style="display:grid;gap:14px"></div>
+      <div class="gform" id="gform">
+        <label>Marca<select id="gmarca"></select></label>
+        <label>Modelo<select id="gmodelo"></select></label>
+        <label>Ano<select id="gano"></select></label>
+        <label>Motor<select id="gmotor"></select></label>
+        <button class="gbtn" id="gok" type="button">Pronto</button>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<nav class="rail" aria-label="Categorias"><div class="wrap" id="rail"></div></nav>
+
+<section class="main"><div class="wrap">
+  <aside class="flt" id="flt" aria-label="Filtros">
+    
+    <div class="box"><h3>Fabricante</h3><div id="fmar" class="scrollbox"></div></div>
+    <div class="box"><h3>Compatibilidade</h3><label class="ck"><input type="checkbox" id="fcomp" checked>Só peças para meu veículo</label><label class="ck"><input type="checkbox" id="fest">Só com estoque</label></div>
+    <div class="box"><h3>Preço até <span id="pval"></span></h3><input type="range" id="fprice" min="30" max="1500" step="10" aria-label="Preço máximo"></div>
+    <div class="box"><h3>Ordenar</h3><select id="ford" aria-label="Ordenar resultados"><option value="rel">Mais relevantes</option><option value="pmin">Menor preço</option><option value="pmax">Maior preço</option><option value="nome">Nome (A–Z)</option></select></div>
+    <button class="clrf" id="clrf" type="button">Limpar filtros</button>
+  </aside>
+  <div>
+    <div class="rhead"><div><h2 id="rtitle">Carregando catálogo</h2><p id="rsub"></p></div><button class="mobf" id="mobf" type="button" aria-expanded="false">Filtros e ordem</button></div>
+    <div class="grid" id="grid"><p class="load">Carregando peças…</p></div>
+    <button class="more" id="more" type="button" hidden>Mostrar mais peças</button>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div><b>Rota Peças</b>Peças para manutenção de carros nacionais e importados, com conferência por modelo, ano e motor.</div>
+  <div><b>Categorias</b><ul><li>Freios e suspensão</li><li>Motor e ignição</li><li>Filtros e óleos</li><li>Elétrica e iluminação</li></ul></div>
+  <div><b>Atendimento</b><ul><li>Segunda a sábado, 8h às 18h</li><li>(11) 5555-0142</li></ul></div>
+  <div><b>Sua compra</b><ul><li>Retirada na loja</li><li>Trocas e garantia</li></ul></div>
+  <div class="bot"><span>© 2026 Rota Peças · protótipo</span><span>Catálogo, preços, estoque e telefone são dados de exemplo.</span></div>
+</div></footer>
+
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dtitle"><div class="dpanel" id="dpanel"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script id="icons">
+{
+/* Ilustrações por tipo de peça. Cores: k1 aço escuro, k2 aço, k3 aço claro, k4 branco, A laranja, B laranja escuro */
+const k=n=>`var(--k${n})`,A='var(--acc)',B='#c8410f';
+const sh=(w=30)=>`<ellipse cx="48" cy="88" rx="${w}" ry="4" fill="${k(1)}" opacity=".16"/>`;
+const lines=(n,f)=>Array.from({length:n},(_,i)=>f(i)).join('');
+const I={
+pastilha:sh(32)+`<g transform="rotate(-10 48 48)"><path d="M14 30Q48 12 82 30L82 44Q48 28 14 44Z" fill="${k(2)}"/><path d="M19 40Q48 26 77 40L77 50Q48 37 19 50Z" fill="${k(1)}"/></g><g transform="rotate(-10 48 48) translate(2 26)"><path d="M14 30Q48 12 82 30L82 44Q48 28 14 44Z" fill="${k(3)}"/><path d="M14 30Q48 12 82 30" fill="none" stroke="${k(4)}" stroke-width="2" opacity=".8"/><path d="M19 40Q48 26 77 40L77 50Q48 37 19 50Z" fill="${k(1)}"/><rect x="44" y="21" width="8" height="6" rx="1.5" fill="${A}"/></g>`,
+disco:sh(30)+`<circle cx="48" cy="46" r="36" fill="${k(3)}"/><circle cx="48" cy="46" r="36" fill="none" stroke="${k(2)}" stroke-width="3"/><circle cx="48" cy="46" r="28" fill="none" stroke="${k(2)}" stroke-width="1.6" stroke-dasharray="3 4"/><circle cx="48" cy="46" r="17" fill="${k(2)}"/><circle cx="48" cy="46" r="7" fill="${k(1)}"/>${lines(5,i=>{const a=i*72*Math.PI/180;return`<circle cx="${(48+11.5*Math.sin(a)).toFixed(1)}" cy="${(46-11.5*Math.cos(a)).toFixed(1)}" r="2.6" fill="${k(4)}"/>`})}<path d="M64 14A36 36 0 0 1 83 40" fill="none" stroke="${A}" stroke-width="15" stroke-linecap="round"/><path d="M66 16A33 33 0 0 1 80 36" fill="none" stroke="#ff8a5c" stroke-width="3" stroke-linecap="round"/>`,
+fluido:sh(22)+`<rect x="38" y="8" width="20" height="14" rx="3" fill="${k(1)}"/><rect x="28" y="20" width="40" height="66" rx="9" fill="${k(4)}" stroke="${k(3)}" stroke-width="2"/><rect x="28" y="42" width="40" height="26" fill="${A}"/><text x="48" y="60" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14" fill="#fff">DOT 4</text><rect x="33" y="24" width="5" height="16" rx="2" fill="#fff" opacity=".8"/>`,
+lona:sh(32)+`<path d="M14 62A34 34 0 0 1 82 62L72 62A24 24 0 0 0 24 62Z" fill="${k(2)}"/><path d="M11 62A37 37 0 0 1 85 62" fill="none" stroke="${k(1)}" stroke-width="7"/><path d="M24 62A24 24 0 0 1 72 62" fill="none" stroke="${k(3)}" stroke-width="2"/><path d="M26 70l5 6 5-6 5 6 5-6 5 6 5-6 5 6 5-6 4 4" fill="none" stroke="${A}" stroke-width="3" stroke-linejoin="round"/><circle cx="20" cy="66" r="4" fill="${k(1)}"/><circle cx="76" cy="66" r="4" fill="${k(1)}"/>`,
+amortecedor:sh(18)+`<circle cx="48" cy="11" r="6" fill="none" stroke="${k(1)}" stroke-width="4"/><rect x="45" y="16" width="6" height="26" fill="${k(3)}"/><rect x="46" y="17" width="2" height="24" fill="${k(4)}"/><rect x="30" y="38" width="36" height="6" rx="3" fill="${A}"/><rect x="35" y="44" width="26" height="38" rx="4" fill="${k(2)}"/><rect x="39" y="47" width="5" height="32" rx="2" fill="${k(3)}"/><rect x="40" y="80" width="16" height="7" rx="2" fill="${k(1)}"/>`,
+bieleta:sh(28)+`<path d="M22 70L74 26" stroke="${k(2)}" stroke-width="7" stroke-linecap="round"/><path d="M24 68L72 28" stroke="${k(3)}" stroke-width="2"/>${[[22,70],[74,26]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="11" fill="${k(1)}"/><circle cx="${x}" cy="${y}" r="6" fill="${A}"/><circle cx="${x-2}" cy="${y-2}" r="2" fill="#fff" opacity=".6"/>`).join('')}`,
+bandeja:sh(32)+`<path d="M16 36L80 30L58 72Z" fill="none" stroke="${k(2)}" stroke-width="12" stroke-linejoin="round"/><path d="M16 36L80 30" stroke="${k(3)}" stroke-width="3"/>${[[16,36],[80,30]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9" fill="${k(1)}"/><circle cx="${x}" cy="${y}" r="3.5" fill="${k(4)}"/>`).join('')}<circle cx="58" cy="72" r="10" fill="${A}"/><rect x="55" y="56" width="6" height="10" fill="${k(1)}"/>`,
+batente:sh(24)+`<rect x="20" y="12" width="56" height="11" rx="5" fill="${k(2)}"/><rect x="36" y="20" width="24" height="8" rx="2" fill="${A}"/><path d="M34 30h28l-4 6 4 6-4 6 4 6-4 6 4 6h-28l4-6-4-6 4-6-4-6 4-6-4-6z" fill="${k(1)}"/><path d="M38 36h20M38 48h20M38 60h20" stroke="${k(2)}" stroke-width="1.5"/><rect x="40" y="72" width="16" height="12" rx="5" fill="${k(2)}"/>`,
+terminal:sh(30)+`<rect x="8" y="50" width="42" height="9" rx="3" fill="${k(3)}"/>${lines(6,i=>`<path d="M${12+i*5} 50v9" stroke="${k(2)}" stroke-width="1.5"/>`)}<rect x="44" y="47" width="10" height="15" rx="2" fill="${k(1)}"/><circle cx="66" cy="55" r="15" fill="${k(2)}"/><circle cx="62" cy="51" r="4" fill="${k(3)}"/><ellipse cx="66" cy="40" rx="10" ry="6" fill="${A}"/><rect x="63" y="14" width="6" height="24" fill="${k(1)}"/><rect x="60" y="20" width="12" height="6" rx="1" fill="${k(1)}"/>`,
+axial:sh(32)+`<path d="M30 58L84 24" stroke="${k(3)}" stroke-width="6" stroke-linecap="round"/><path d="M60 39L84 24" stroke="${k(2)}" stroke-width="2"/><circle cx="20" cy="66" r="12" fill="${k(2)}"/><circle cx="20" cy="66" r="5" fill="${k(1)}"/>${lines(4,i=>`<circle cx="${33+i*6}" cy="${57-i*3.8}" r="${7.5-i*.6}" fill="${i%2?B:A}"/>`)}`,
+vela:sh(16)+`<rect x="43" y="4" width="10" height="9" rx="2" fill="${k(2)}"/><path d="M40 13h16l2 30H38z" fill="${k(4)}" stroke="${k(3)}" stroke-width="1.5"/>${lines(4,i=>`<path d="M40 ${18+i*6}h16" stroke="${k(3)}" stroke-width="1.5"/>`)}<rect x="36" y="22" width="24" height="3" fill="${A}" opacity=".9"/><path d="M33 43h30l-2 13H35z" fill="${k(1)}"/><path d="M40 43v13M48 43v13M56 43v13" stroke="${k(2)}" stroke-width="1"/><rect x="39" y="56" width="18" height="20" fill="${k(2)}"/>${lines(5,i=>`<path d="M39 ${59+i*4}l18 -2" stroke="${k(3)}" stroke-width="1.5"/>`)}<path d="M46 76v6h8v-3" fill="none" stroke="${k(1)}" stroke-width="3"/><path d="M62 78l6-4M62 84l7 1M60 72l3-6" stroke="${A}" stroke-width="2.5" stroke-linecap="round"/>`,
+bobina:sh(20)+`<rect x="24" y="10" width="46" height="26" rx="6" fill="${k(1)}"/><rect x="28" y="14" width="28" height="4" rx="2" fill="${k(2)}"/><rect x="64" y="16" width="16" height="13" rx="3" fill="${A}"/><rect x="40" y="36" width="16" height="36" fill="${k(2)}"/><rect x="43" y="38" width="4" height="32" fill="${k(3)}"/><rect x="38" y="70" width="20" height="12" rx="5" fill="${k(1)}"/>`,
+cabo:sh(30)+`<path d="M14 22C44 22 40 64 72 66" fill="none" stroke="${k(1)}" stroke-width="5"/><path d="M14 36C40 36 44 56 80 52" fill="none" stroke="${k(2)}" stroke-width="5"/><path d="M14 50C34 50 40 78 66 80" fill="none" stroke="${k(1)}" stroke-width="5"/>${[[12,22],[12,36],[12,50]].map(([x,y])=>`<rect x="${x-6}" y="${y-5}" width="10" height="10" rx="2" fill="${k(2)}"/>`).join('')}${[[72,66],[80,52],[66,80]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="7" fill="${A}"/>`).join('')}`,
+bico:sh(14)+`<rect x="38" y="8" width="20" height="16" rx="3" fill="${k(1)}"/><rect x="56" y="11" width="12" height="9" rx="2" fill="${k(1)}"/><rect x="40" y="24" width="16" height="30" fill="${k(2)}"/><rect x="43" y="26" width="4" height="26" fill="${k(3)}"/><rect x="38" y="28" width="20" height="5" rx="2" fill="${A}"/><rect x="38" y="46" width="20" height="5" rx="2" fill="${A}"/><path d="M42 54h12l-3 14h-6z" fill="${k(3)}"/><path d="M48 72v10M44 71l-6 10M52 71l6 10" stroke="${k(2)}" stroke-width="2" stroke-dasharray="2 3" stroke-linecap="round"/>`,
+dentada:sh(26)+`<g transform="rotate(30 48 48)"><rect x="30" y="12" width="36" height="72" rx="18" fill="none" stroke="${k(1)}" stroke-width="10" stroke-dasharray="2.5 2.5"/><rect x="30" y="12" width="36" height="72" rx="18" fill="none" stroke="${k(1)}" stroke-width="5"/></g><circle cx="57" cy="32.4" r="15" fill="${k(2)}"/><circle cx="57" cy="32.4" r="5" fill="${k(1)}"/><circle cx="39" cy="63.6" r="12" fill="${k(2)}"/><circle cx="39" cy="63.6" r="4" fill="${k(1)}"/><circle cx="70" cy="62" r="8" fill="${A}"/><circle cx="70" cy="62" r="3" fill="${k(4)}"/>`,
+acess:sh(28)+`<path d="M16 30A15 15 0 0 1 38 18L72 28A13 13 0 0 1 79 50L52 78A10 10 0 0 1 34 72Z" fill="none" stroke="${k(1)}" stroke-width="5" stroke-linejoin="round"/><circle cx="29" cy="31" r="13" fill="${k(2)}"/><circle cx="29" cy="31" r="4" fill="${k(1)}"/><circle cx="68" cy="40" r="11" fill="${A}"/><circle cx="68" cy="40" r="4" fill="${k(4)}"/><circle cx="44" cy="70" r="9" fill="${k(2)}"/><circle cx="44" cy="70" r="3" fill="${k(1)}"/>`,
+f_oleo:sh(24)+`<rect x="22" y="14" width="52" height="11" rx="3" fill="${k(1)}"/><rect x="25" y="24" width="46" height="60" rx="7" fill="${A}"/>${lines(6,i=>`<rect x="${29+i*7}" y="26" width="3" height="12" rx="1.5" fill="${B}"/>`)}<rect x="25" y="46" width="46" height="18" fill="${k(4)}"/><rect x="31" y="51" width="22" height="3" rx="1.5" fill="${k(2)}"/><rect x="31" y="57" width="14" height="3" rx="1.5" fill="${k(3)}"/><rect x="29" y="28" width="5" height="52" rx="2" fill="#fff" opacity=".25"/>`,
+f_ar:sh(32)+`<path d="M12 36L60 22L86 44L38 60Z" fill="${k(1)}"/><path d="M12 36L38 60L86 44L86 51L38 67L12 43Z" fill="${A}"/><path d="M38 60L38 67" stroke="${B}" stroke-width="2"/><path d="M21 37L58 27L76 43L39 54Z" fill="${k(4)}"/>${lines(8,i=>{const t=(i+1)/9;const x1=21+(58-21)*t,y1=37+(27-37)*t,x2=39+(76-39)*t,y2=54+(43-54)*t;return`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${k(3)}" stroke-width="1.8"/>`})}`,
+f_comb:sh(30)+`<rect x="6" y="44" width="16" height="7" rx="3" fill="${k(1)}"/><rect x="74" y="44" width="16" height="7" rx="3" fill="${k(1)}"/><rect x="20" y="30" width="56" height="35" rx="10" fill="${k(2)}"/><rect x="24" y="34" width="48" height="6" rx="3" fill="${k(3)}"/><rect x="38" y="30" width="20" height="35" fill="${k(4)}"/><path d="M42 47.5h12m-5-5 5 5-5 5" fill="none" stroke="${A}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`,
+f_cab:sh(30)+`<rect x="16" y="20" width="64" height="58" rx="4" fill="${k(2)}"/><rect x="22" y="26" width="52" height="46" fill="${k(4)}"/><path d="M22 ${26}${lines(13,i=>`L${22+(i+1)*4} ${i%2?26:72}`)}" fill="none" stroke="${k(3)}" stroke-width="1.6"/><path d="M60 8c6 4 6 8 0 12M68 8c6 4 6 8 0 12" fill="none" stroke="${A}" stroke-width="3" stroke-linecap="round"/><rect x="16" y="20" width="64" height="5" fill="${A}"/>`,
+oleo:sh(24)+`<rect x="30" y="8" width="16" height="12" rx="2" fill="${A}"/><path d="M26 22h36l10 12v46a5 5 0 0 1-5 5H27a5 5 0 0 1-5-5V27a5 5 0 0 1 4-5z" fill="${k(1)}"/><path d="M56 22h6l10 12h-12z" fill="${k(2)}"/><rect x="26" y="44" width="42" height="28" rx="3" fill="${A}"/><path d="M47 50c-6 8-6 12 0 12s6-4 0-12z" fill="#fff"/><rect x="27" y="26" width="4" height="50" rx="2" fill="#fff" opacity=".18"/>`,
+aditivo:sh(26)+`<path d="M58 30v-8a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v18" fill="none" stroke="${k(3)}" stroke-width="5"/><rect x="30" y="16" width="16" height="12" rx="2" fill="${k(1)}"/><rect x="22" y="26" width="52" height="58" rx="9" fill="${k(4)}" stroke="${k(3)}" stroke-width="2"/><rect x="26" y="48" width="44" height="32" rx="6" fill="${A}" opacity=".85"/><path d="M26 52q11-5 22 0t22 0" fill="none" stroke="#ffb08f" stroke-width="2"/><rect x="27" y="30" width="5" height="16" rx="2" fill="${k(3)}"/>`,
+bomba:sh(30)+`<path d="M46 28h20a14 14 0 0 1 14 14v12a14 14 0 0 1-14 14H46z" fill="${k(1)}"/>${lines(4,i=>`<path d="M${66+i*0} 48" />`)}<circle cx="72" cy="48" r="9" fill="${A}"/><path d="M72 39v18M63 48h18M66 42l12 12M78 42L66 54" stroke="${B}" stroke-width="2"/><circle cx="34" cy="48" r="24" fill="${k(2)}"/><circle cx="34" cy="48" r="24" fill="none" stroke="${k(3)}" stroke-width="2"/><circle cx="34" cy="48" r="9" fill="${k(1)}"/>${lines(4,i=>{const a=(i*90+45)*Math.PI/180;return`<circle cx="${(34+16*Math.cos(a)).toFixed(1)}" cy="${(48+16*Math.sin(a)).toFixed(1)}" r="3" fill="${k(4)}"/>`})}`,
+termo:sh(26)+`<ellipse cx="48" cy="34" rx="34" ry="11" fill="${k(2)}"/><ellipse cx="48" cy="32" rx="34" ry="10" fill="${k(3)}"/><ellipse cx="48" cy="32" rx="14" ry="5" fill="${k(1)}"/><rect x="43" y="16" width="10" height="12" rx="4" fill="${k(2)}"/><rect x="42" y="44" width="12" height="30" rx="4" fill="${k(1)}"/><path d="M36 44l24 4-24 4 24 4-24 4 24 4-24 4 24 4" fill="none" stroke="${A}" stroke-width="3.2" stroke-linejoin="round"/><path d="M30 38v40M66 38v40M30 78h36" fill="none" stroke="${k(2)}" stroke-width="3"/>`,
+radiador:sh(36)+`<rect x="16" y="26" width="64" height="48" fill="${k(3)}"/>${lines(15,i=>`<path d="M${19+i*4} 26v48" stroke="${k(2)}" stroke-width="1.4"/>`)}<rect x="8" y="20" width="11" height="60" rx="4" fill="${k(1)}"/><rect x="77" y="20" width="11" height="60" rx="4" fill="${k(1)}"/><rect x="80" y="10" width="6" height="12" fill="${k(1)}"/><circle cx="83" cy="10" r="6" fill="${A}"/><rect x="2" y="66" width="8" height="7" rx="2" fill="${k(1)}"/>`,
+bateria:sh(34)+`<rect x="20" y="14" width="13" height="10" rx="2" fill="${A}"/><rect x="63" y="14" width="13" height="10" rx="2" fill="${k(3)}"/><rect x="12" y="22" width="72" height="12" rx="4" fill="${k(2)}"/><rect x="14" y="32" width="68" height="50" rx="4" fill="${k(1)}"/><rect x="22" y="48" width="52" height="20" rx="3" fill="${A}"/><path d="M49 51l-6 9h6l-3 7 9-10h-6l3-6z" fill="#fff"/><text x="26" y="45" font-family="Barlow,sans-serif" font-weight="700" font-size="11" fill="${k(4)}">+</text><text x="66" y="45" font-family="Barlow,sans-serif" font-weight="700" font-size="11" fill="${k(4)}">−</text>`,
+partida:sh(32)+`<rect x="30" y="20" width="38" height="20" rx="9" fill="${k(1)}"/><circle cx="62" cy="20" r="4.5" fill="${A}"/><rect x="26" y="38" width="48" height="32" rx="7" fill="${k(2)}"/><rect x="30" y="42" width="40" height="5" rx="2.5" fill="${k(3)}"/><rect x="70" y="40" width="12" height="28" rx="4" fill="${k(1)}"/><rect x="16" y="51" width="12" height="7" fill="${k(3)}"/><circle cx="14" cy="54.5" r="9" fill="${A}"/><circle cx="14" cy="54.5" r="11" fill="none" stroke="${A}" stroke-width="4" stroke-dasharray="2.6 2.6"/><circle cx="14" cy="54.5" r="3" fill="${B}"/>`,
+palheta:sh(36)+`<path d="M52 50L64 12" stroke="${k(2)}" stroke-width="5" stroke-linecap="round"/><path d="M10 72Q48 46 86 30" fill="none" stroke="${k(1)}" stroke-width="8" stroke-linecap="round"/><path d="M12 77Q49 51 87 35" fill="none" stroke="${k(3)}" stroke-width="2.5" stroke-linecap="round"/><path d="M14 68Q48 44 82 30" fill="none" stroke="${k(2)}" stroke-width="2" stroke-linecap="round"/><rect x="42" y="44" width="16" height="10" rx="3" fill="${A}" transform="rotate(-22 50 49)"/>`,
+lampada:sh(20)+`<rect x="40" y="6" width="16" height="7" rx="3" fill="${k(1)}"/><path d="M36 12h24a7 7 0 0 1 7 7v28a7 7 0 0 1-7 7H36a7 7 0 0 1-7-7V19a7 7 0 0 1 7-7z" fill="${k(4)}" stroke="${k(3)}" stroke-width="2"/><path d="M42 20v20M54 20v20" stroke="${k(2)}" stroke-width="1.5"/><path d="M42 26l3 3 3-3 3 3 3-3" fill="none" stroke="${A}" stroke-width="2.5"/><path d="M42 36l3 3 3-3 3 3 3-3" fill="none" stroke="${A}" stroke-width="2.5"/><rect x="33" y="16" width="4" height="26" rx="2" fill="#fff"/><rect x="24" y="54" width="48" height="7" rx="2" fill="${k(3)}"/><rect x="33" y="60" width="30" height="14" rx="2" fill="${k(2)}"/><rect x="37" y="74" width="4" height="10" fill="${k(1)}"/><rect x="46" y="74" width="4" height="10" fill="${k(1)}"/><rect x="55" y="74" width="4" height="10" fill="${k(1)}"/>`,
+embreagem:sh(30)+`<circle cx="48" cy="46" r="36" fill="${k(1)}"/>${lines(12,i=>{const a=i*30*Math.PI/180;return`<path d="M${(48+28*Math.cos(a)).toFixed(1)} ${(46+28*Math.sin(a)).toFixed(1)}L${(48+35*Math.cos(a)).toFixed(1)} ${(46+35*Math.sin(a)).toFixed(1)}" stroke="${k(2)}" stroke-width="1.6"/>`})}<circle cx="48" cy="46" r="26" fill="${k(2)}"/>${lines(4,i=>`<rect x="44" y="26" width="8" height="12" rx="3" fill="${A}" transform="rotate(${i*90+45} 48 46)"/>`)}<circle cx="48" cy="46" r="9" fill="${k(3)}"/><circle cx="48" cy="46" r="4.5" fill="${k(1)}"/>`
+};
+const REP={freios:'disco',suspensao:'amortecedor',direcao:'terminal',motor:'vela',filtros:'f_oleo',oleos:'oleo',arrefecimento:'radiador',eletrica:'bateria',iluminacao:'lampada',transmissao:'embreagem'};
+window.Icone=(tipo,cls='')=>`<svg viewBox="0 0 96 96" class="${cls}" aria-hidden="true">${I[tipo]||I.disco}</svg>`;
+window.IconeCat=c=>window.Icone(REP[c]);
+}
+</script>
+
+<script id="engine">
+{
+const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const toks=s=>norm(s).replace(/[^a-z0-9]+/g,' ').trim().split(' ').filter(Boolean);
+const M={norm,toks,PECAS:[],MOD:{},MODELOS:[],CATS:{},TIPOS:{},FAB:[]};
+const ALIAS=[];
+let POR={};
+const ses=(()=>{try{let s=localStorage.getItem('rp_ses');if(!s){s=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();localStorage.setItem('rp_ses',s)}return s}catch(e){return 'anon'}})();
+const cid=()=>window.fonte.cliente?window.fonte.cliente.id:null;
+const api=async(rota,o)=>{
+  const r=await fetch('/api'+rota,o&&{method:o.m,headers:{'content-type':'application/json'},body:JSON.stringify(o.b)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.erro||r.status);
+  return d};
+function carregar(d){
+  M.CATS={};M.TIPOS={};M.MOD={};ALIAS.length=0;
+  for(const[s,n]of d.categorias)M.CATS[s]={n};
+  for(const[s,n,c,t,img]of d.tipos)M.TIPOS[s]=[n,c,t,img||null];
+  M.MODELOS=d.montadoras;
+  for(const[bk,bn,ms]of M.MODELOS)for(const[k,n,al,car,gens]of ms){M.MOD[k]={k,n,marca:bk,marcaN:bn,al,car,gens};for(const a of al)ALIAS.push([a,k])}
+  M.PECAS=d.pecas.map(([id,n,m,t,p,e,desc,tags,fit,img])=>{const ti=M.TIPOS[t];return{id,n,m,t,tipo:ti[0],c:ti[1],p,estoque:e,d:desc,fit,img:img||ti[3]}});
+  POR=Object.fromEntries(M.PECAS.map(p=>[p.id,p]));
+  M.FAB=[...new Set(M.PECAS.map(p=>p.m))].sort()}
+function fitOf(p,v){
+  if(p.fit==='*')return'un';if(!v||!v.modelo)return'?';
+  const rs=p.fit.filter(x=>x[0]===v.modelo&&(!v.ano||(v.ano>=x[1]&&v.ano<=x[2])));
+  if(!rs.length)return'no';
+  if(v.motor&&!rs.some(x=>x[3].includes(v.motor)))return'no';
+  return'ok'}
+const FM={serve:'ok','não serve':'no',universal:'un','escolha o veículo':'?'};
+async function buscar(frase,g,lim){
+  const u=new URLSearchParams({q:frase||''});
+  if(g&&g.modelo){u.set('modelo',g.modelo);if(g.ano)u.set('ano',g.ano);if(g.motor)u.set('motor',g.motor)}
+  if(lim)u.set('limite',lim);
+  const d=await api('/busca?'+u);
+  return{interp:d.interp,resultados:d.resultados.filter(r=>POR[r.codigo]).map(r=>({p:POR[r.codigo],fit:FM[r.compat]||'?',sc:r.relevancia}))}}
+function sugerir(frase){
+  const t=toks(frase);if(!t.length)return[];const last=t[t.length-1];const out=[];
+  for(const s in M.TIPOS){const n=M.TIPOS[s][0];const nt=toks(n);if(nt.some(w=>w.startsWith(last))&&t.slice(0,-1).every(q=>nt.some(w=>w.startsWith(q))||ALIAS.some(a=>a[0]===q)))out.push({k:'tipo',txt:n,tipo:s})}
+  if(last.length>=2)for(const k in M.MOD){const m=M.MOD[k];if(norm(m.n).replace(/[^a-z0-9]/g,'').startsWith(last))out.push({k:'carro',txt:m.n,mod:k,sub:m.marcaN})}
+  if(last.length>=2)for(const k in M.CATS)if(toks(M.CATS[k].n).some(w=>w.startsWith(last)))out.push({k:'cat',txt:M.CATS[k].n,cat:k});
+  return out.slice(0,7)}
+Object.assign(M,{carregar,buscar,sugerir,fitOf});
+window.Motor=M;
+window.fonte={
+  cliente:null,
+  carregar:async()=>carregar(await api('/catalogo')),
+  buscar,
+  registrarBusca:(q,n)=>api('/busca',{m:'POST',b:{q,n,sessao:ses,cliente:cid()}}).catch(()=>{}),
+  maisBuscadas:()=>api('/mais-buscadas').catch(()=>[]),
+  evento:(acao,codigo,consulta)=>api('/evento',{m:'POST',b:{acao,codigo,consulta,sessao:ses,cliente:cid()}}).catch(()=>{}),
+  entrar:(email,nome)=>api('/entrar',{m:'POST',b:{email,nome}}),
+  salvarGaragem:(cliente,carros)=>api('/garagem',{m:'PUT',b:{cliente,carros}}).catch(()=>{}),
+  pedido:(cliente,itens)=>api('/pedidos',{m:'POST',b:{cliente,itens}})
+};
+}
+</script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=n=>'R$ '+n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+,)/g,'.');
+const M=window.Motor,Ic=window.Icone;
+/* Foto real quando existir (campo imagem da peça ou do tipo no banco); senão, a ilustração */
+const Pic=p=>p.img?`<img class="foto" src="${esc(p.img)}" alt="${esc(p.n)}" loading="lazy" data-t="${esc(p.t)}">`:Ic(p.t);
+document.addEventListener('error',e=>{const i=e.target;if(i.tagName==='IMG'&&i.dataset.t){i.outerHTML=Ic(i.dataset.t)}},true);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const S={q:'',cars:store.get('rp_cars',null)||[],ai:store.get('rp_ai',0),edit:false,fmarca:'',cats:new Set(),mars:new Set(),comp:true,est:false,pmax:1500,ord:'rel',cart:store.get('rp_cart',[]),last:null,show:12,acI:-1,acL:[],ok:false};
+if(!Array.isArray(S.cars))S.cars=[];if(!(S.ai<S.cars.length))S.ai=0;
+let CLI=store.get('rp_cli',null);
+window.fonte.cliente=CLI;
+const guardaCart=()=>{store.set('rp_cart',S.cart);$('#ccount').textContent=S.cart.length};
+const comb=(c,ge)=>{const m=c.motor||ge[2][0]||'';return/diesel/.test(m)?'Diesel':/hibrido/.test(m)?'Híbrido':'Flex'};
+const servem=p=>{if(p.fit==='*')return'Serve na maioria dos carros';const n=[...new Set(p.fit.map(f=>M.MOD[f[0]].n))];return'Serve em '+n.slice(0,3).join(', ')+(n.length>3?' +'+(n.length-3):'')};
+function aplicaCliente(c,quieto){
+  CLI={id:c.id,nome:c.nome,email:c.email,pedidos:c.pedidos||[]};
+  window.fonte.cliente=CLI;store.set('rp_cli',CLI);
+  if(c.garagem&&c.garagem.length){S.cars=c.garagem.filter(x=>M.MOD[x.modelo]);S.ai=0;S.edit=false;store.set('rp_cars',S.cars);store.set('rp_ai',0)}
+  else if(S.cars.length)window.fonte.salvarGaragem(CLI.id,S.cars.filter(x=>x.modelo));
+  $('#login .lb').textContent=CLI.nome.split(' ')[0];
+  if(!quieto){renderGarage();run()}}
+function openLogin(msg){
+  $('#dpanel').innerHTML=CLI
+   ?`<button class="x" type="button" data-close>Fechar</button><h2 id="dtitle">Olá, ${esc(CLI.nome)}</h2><p class="note">${esc(CLI.email)}</p><div class="cartl">${(CLI.pedidos||[]).map(p=>`<div class="ci" style="grid-template-columns:1fr auto"><div><b>Pedido #${p.id}</b><div class="meta">${esc(p.status)} · ${new Date(p.data).toLocaleDateString('pt-BR')}</div></div><span class="price" style="font-size:20px">${brl(p.total)}</span></div>`).join('')||'<p>Nenhum pedido ainda.</p>'}</div><button class="addw" type="button" id="sair">Sair</button>`
+   :`<button class="x" type="button" data-close>Fechar</button><h2 id="dtitle">Entrar</h2><p class="note">${esc(msg||'Seu e-mail guarda a garagem e os pedidos.')}</p><input id="lemail" type="email" autocomplete="email" placeholder="voce@email.com" aria-label="E-mail" style="min-height:48px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="addw" type="button" id="lok">Continuar</button>`;
+  openD()}
+$('#login').onclick=()=>openLogin();
+$('#und').addEventListener('click',e=>{if(e.target.closest('#salvarv')&&S.last&&S.last.interp.veiculo){veioDaFrase(S.last.interp.veiculo);run()}});
+/* ---------- Minha garagem ---------- */
+const CORES={laranja:['#ff6a2b','#c8410f','Laranja'],prata:['#e4e7ea','#8e959e','Prata'],grafite:['#5a616a','#1d2024','Grafite'],branco:['#ffffff','#c3c7cc','Branco'],vermelho:['#e0313f','#8f1424','Vermelho'],azul:['#3b7be0','#1b3f85','Azul']};
+const CARRO_N={hatch:'Hatch',sedan:'Sedã',suv:'SUV',picape:'Picape'};
+const CORPO={
+ hatch:{b:'M66,188 L66,134 Q68,118 84,104 L128,66 Q140,56 170,55 L370,54 Q408,56 452,96 L546,110 Q584,118 588,150 L588,186 Q588,196 578,196 L517,196 A52,52 0 0 0 413,196 L227,196 A52,52 0 0 0 123,196 L76,196 Q66,196 66,188Z',w:['M104,100 L136,70 Q146,64 168,64 L214,64 L214,100Z','M226,64 L318,64 L318,100 L226,100Z','M330,64 L362,63 Q394,66 428,100 L330,100Z'],d:[220,324],mi:[428,98],r:[175,465],R:40,hl:[560,120],tl:[66,120],pl:[258,140],roof:'M84,104 L128,66 Q140,56 170,55 L370,54 Q408,56 452,96'},
+ sedan:{b:'M60,186 L60,148 Q64,122 104,114 L196,104 Q236,62 300,54 L398,52 Q440,54 482,94 L562,108 Q598,116 602,150 L602,184 Q602,194 590,194 L522,194 A52,52 0 0 0 418,194 L222,194 A52,52 0 0 0 118,194 L72,194 Q60,194 60,186Z',w:['M212,102 Q248,68 300,62 L338,62 L338,102Z','M350,62 L396,61 Q432,64 464,100 L350,102Z'],d:[344],mi:[462,98],r:[170,470],R:40,hl:[574,122],tl:[60,130],pl:[258,140],roof:'M104,114 L196,104 Q236,62 300,54 L398,52 Q440,54 482,94 L562,108'},
+ suv:{b:'M62,190 L62,120 Q64,96 84,66 Q94,46 130,44 L372,42 Q410,44 450,86 L548,100 Q590,108 594,140 L594,188 Q594,196 584,196 L524,196 A56,56 0 0 0 416,196 L231,196 A56,56 0 0 0 119,196 L72,196 Q62,196 62,190Z',w:['M92,88 Q102,58 130,54 L200,53 L200,88Z','M212,53 L310,52 L310,88 L212,88Z','M322,52 L366,52 Q400,56 436,88 L322,88Z'],d:[206,316],mi:[436,86],r:[175,470],R:44,hl:[566,112],tl:[62,112],pl:[262,136],rack:true,roof:'M84,66 Q94,46 130,44 L372,42 Q410,44 450,86'},
+ picape:{b:'M40,190 L40,126 L298,126 L298,118 Q302,72 330,52 L420,50 Q450,52 482,96 L566,108 Q600,116 604,148 L604,188 Q604,196 594,196 L537,196 A52,52 0 0 0 433,196 L217,196 A52,52 0 0 0 113,196 L50,196 Q40,196 40,190Z',w:['M312,96 Q316,66 334,60 L384,59 L384,96Z','M396,59 L418,58 Q446,62 470,96 L396,96Z'],d:[390],mi:[470,94],r:[165,485],R:40,hl:[578,120],tl:[40,136],pl:[250,142],bed:true,roof:'M298,118 Q302,72 330,52 L420,50 Q450,52 482,96'}};
+const gar=()=>{const c=S.cars[S.ai];return c&&c.modelo?c:null};
+const salvaCars=()=>{const l=S.cars.filter(c=>c.modelo);store.set('rp_cars',l);store.set('rp_ai',S.ai);if(CLI)window.fonte.salvarGaragem(CLI.id,l)};
+const cname=c=>c&&c.modelo?M.MOD[c.modelo].n+(c.ano?' '+c.ano:''):'';
+const corDe=c=>CORES[c&&c.cor]||CORES.prata;
+const miniCar=cor=>`<svg viewBox="0 0 28 16" width="28" height="16" aria-hidden="true"><path d="M2 11.5l1.6-3.8A2 2 0 0 1 5.4 6.5h3.2l2.6-3h7.2l3.4 3h1.8a2 2 0 0 1 1.9 1.4l.9 3.6v2.5H2z" fill="${cor}" stroke="#0006" stroke-width=".8"/><circle cx="8" cy="14" r="2.4" fill="#111"/><circle cx="21" cy="14" r="2.4" fill="#111"/></svg>`;
+const ICO={
+ ano:'<path d="M4 7h16v13H4zM4 11h16M8 4v5M16 4v5" fill="none" stroke="currentColor" stroke-width="2"/>',
+ motor:'<path d="M5 9h3V7h6v2h2l2 2h2v6h-2l-2 2H8l-3-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+ comb:'<path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8l3 2v7a1.5 1.5 0 0 0 3 0V9l-3-3" fill="none" stroke="currentColor" stroke-width="2"/>',
+ car:'<path d="M3 15l2-5a2 2 0 0 1 2-1.3h10A2 2 0 0 1 19 10l2 5v3H3z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="18" r="1.5" fill="currentColor"/><circle cx="16.5" cy="18" r="1.5" fill="currentColor"/>',
+ edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+ del:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2"/>',
+ casa:'<path d="M3 11L12 4l9 7v9H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 20v-7h10v7M7 15.5h10M7 18h10" stroke="currentColor" stroke-width="1.6"/>'};
+const ico=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+function drawCar(){
+  const c=gar(),m=c?M.MOD[c.modelo]:null,t=m?(m.car||'hatch'):'sedan',g=CORPO[t];
+  const[c1,c2]=m?corDe(c):['#3a3f46','#2b2f35'];
+  const plate=m?cname(c).toUpperCase():'SEU CARRO';const cy=195;
+  const wheel=x=>{const R=g.R;return`<circle cx="${x}" cy="${cy}" r="${R}" fill="#111214"/><circle cx="${x}" cy="${cy}" r="${R-3}" fill="none" stroke="#2b2d31" stroke-width="2"/><circle cx="${x}" cy="${cy}" r="${R*.64}" fill="#e3e6e9"/><circle cx="${x}" cy="${cy}" r="${R*.55}" fill="#9aa0a8"/>${[0,72,144,216,288].map(a=>`<path d="M${x-4},${cy-R*.08} L${x-6},${cy-R*.58} L${x+6},${cy-R*.58} L${x+4},${cy-R*.08}Z" fill="#e3e6e9" transform="rotate(${a} ${x} ${cy})"/>`).join('')}<circle cx="${x}" cy="${cy}" r="8" fill="#3a3d42"/><circle cx="${x}" cy="${cy}" r="3" fill="#c9ccd1"/>`};
+  const arch=x=>`<path d="M${x-g.R-11},${cy-1} A${g.R+11},${g.R+11} 0 0 1 ${x+g.R+11},${cy-1}" fill="none" stroke="#00000045" stroke-width="5"/>`;
+  const ribs=Array.from({length:9},(_,i)=>`<rect x="110" y="${30+i*16}" width="420" height="2" fill="#00000030"/><rect x="110" y="${32+i*16}" width="420" height="1" fill="#ffffff12"/>`).join('');
+  $('#car').innerHTML=`<defs>
+   <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3036"/><stop offset="1" stop-color="#3b4048"/></linearGradient>
+   <linearGradient id="door" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#454b53"/><stop offset="1" stop-color="#565c65"/></linearGradient>
+   <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6dc" stop-opacity=".28"/><stop offset="1" stop-color="#fff6dc" stop-opacity="0"/></linearGradient>
+   <linearGradient id="chao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26292e"/><stop offset="1" stop-color="#16181b"/></linearGradient>
+   <linearGradient id="bd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+   <linearGradient id="brilho" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+   <linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dbe6ee"/><stop offset="1" stop-color="#55687a"/></linearGradient>
+   <radialGradient id="farol" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff7d6" stop-opacity=".9"/><stop offset="1" stop-color="#fff7d6" stop-opacity="0"/></radialGradient>
+   <clipPath id="cb"><path d="${g.b}"/></clipPath></defs>
+  <rect x="-400" y="-200" width="1440" height="650" fill="url(#wall)"/>
+  <rect x="100" y="20" width="440" height="168" rx="4" fill="url(#door)"/>${ribs}<rect x="100" y="20" width="440" height="168" rx="4" fill="none" stroke="#1c1f23" stroke-width="4"/>
+  <rect x="296" y="-6" width="48" height="10" rx="4" fill="#1c1f23"/><rect x="302" y="2" width="36" height="5" rx="2" fill="#fff4d0"/>
+  <path d="M302,6 L338,6 L520,190 L120,190Z" fill="url(#cone)"/>
+  <path d="M-400,186 H1040 V450 H-400Z" fill="url(#chao)"/><path d="M-400,186 H1040" stroke="#ffffff22" stroke-width="2"/>
+  <ellipse cx="320" cy="214" rx="260" ry="20" fill="#fff6dc" opacity=".06"/>
+  <path d="M8,250 L36,186 L50,186 L24,250Z" fill="#ff5a1f"/><path d="M616,250 L592,186 L606,186 L632,250Z" fill="#ff5a1f"/>
+  <g class="carro">
+   <ellipse cx="${(g.r[0]+g.r[1])/2}" cy="236" rx="${(g.r[1]-g.r[0])/2+120}" ry="9" fill="#000" opacity=".6"/>
+   ${g.rack?`<rect x="120" y="34" width="240" height="5" rx="2" fill="#1d2024"/><rect x="140" y="38" width="6" height="7" fill="#1d2024"/><rect x="334" y="38" width="6" height="7" fill="#1d2024"/>`:''}
+   <path d="${g.b}" fill="url(#bd)" ${m?'':'stroke="#7b8189" stroke-width="2" stroke-dasharray="8 6"'}/>
+   ${m?`<g clip-path="url(#cb)"><rect x="0" y="0" width="640" height="${g.w[0].includes('53')?92:104}" fill="url(#brilho)" opacity=".5"/><rect x="0" y="170" width="640" height="40" fill="#000" opacity=".18"/></g>`:''}
+   ${g.bed?`<rect x="44" y="120" width="252" height="8" rx="2" fill="${c2}"/>`:''}
+   <path d="${g.roof}" fill="none" stroke="#ffffff80" stroke-width="3" stroke-linecap="round"/>
+   ${g.w.map(w=>`<path d="${w}" fill="url(#gl)" opacity="${m?1:.35}"/>`).join('')}
+   ${m?g.w.map(w=>{const x=+w.match(/M(\d+)/)[1];return`<path d="M${x+18},96 L${x+40},68" stroke="#ffffff55" stroke-width="5" stroke-linecap="round"/>`}).join(''):''}
+   ${m?g.d.map(x=>`<path d="M${x},104 V186" stroke="#00000035" stroke-width="2"/><rect x="${x-34}" y="114" width="18" height="4" rx="2" fill="#00000045"/>`).join(''):''}
+   <path d="M${g.tl[0]+8},156 H${g.hl[0]+12}" stroke="#ffffff30" stroke-width="2"/><path d="M${g.tl[0]+8},158 H${g.hl[0]+12}" stroke="#00000030" stroke-width="2"/>
+   ${m?`<path d="M${g.mi[0]},${g.mi[1]} l14,-2 l2,10 l-14,2z" fill="${c2}"/>`:''}
+   ${arch(g.r[0])}${arch(g.r[1])}
+   <ellipse cx="${g.hl[0]+40}" cy="${g.hl[1]+7}" rx="40" ry="14" fill="url(#farol)" opacity="${m?1:0}"/>
+   <rect x="${g.hl[0]}" y="${g.hl[1]}" width="26" height="14" rx="5" fill="#fff7d6"/><rect x="${g.tl[0]}" y="${g.tl[1]}" width="10" height="20" rx="3" fill="#d23a22"/>
+   ${wheel(g.r[0])}${wheel(g.r[1])}
+   <g transform="translate(${g.pl[0]} ${g.pl[1]})"><rect width="124" height="34" rx="4" fill="#fff" stroke="#15171a" stroke-width="2"/><rect x="1" y="1" width="122" height="10" rx="3" fill="#1f4fa8"/><text x="62" y="9" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="7.5" letter-spacing="1.5" fill="#fff">BRASIL</text><text x="62" y="29" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="${plate.length>13?12:plate.length>10?14.5:17}" fill="#15171a">${esc(plate)}</text></g>
+  </g>`;
+  const cc=c?c.cor:'';
+  $('#cores').hidden=!m||!S.edit;
+  $('#cores').innerHTML=`<span>Cor <b>${esc(m?corDe(c)[2]:'')}</b></span><div>`+Object.entries(CORES).map(([k,[a,,n]])=>`<button type="button" class="cor${cc===k?' on':''}" role="radio" aria-checked="${cc===k}" aria-label="${n}" title="${n}" data-cor="${k}" style="background:${a}"></button>`).join('')+'</div>'}
+function contagem(c){const v={modelo:c.modelo,ano:c.ano,motor:c.motor};const n={};for(const p of M.PECAS)if(M.fitOf(p,v)==='ok')n[p.c]=(n[p.c]||0)+1;return n}
+function kitRevisao(c){
+  const v={modelo:c.modelo,ano:c.ano,motor:c.motor};const it=[];
+  for(const t of['oleo','f_oleo','f_ar','f_comb','f_cab']){
+    const ps=M.PECAS.filter(p=>p.t===t&&p.estoque>0&&M.fitOf(p,v)!=='no').sort((a,b)=>a.p-b.p);if(!ps.length)continue;
+    const mid=l=>l[Math.floor((l.length-1)/2)];
+    if(t==='oleo'){const g=ps.filter(p=>/\b4 ?L\b/i.test(p.n));it.push(g.length?[mid(g),1]:[mid(ps),4])}else it.push([mid(ps),1])}
+  return it}
+function geracao(c){const m=M.MOD[c.modelo];return m.gens.find(g=>!c.ano||(c.ano>=g[0]&&c.ano<=g[1]))||m.gens[0]}
+function renderGarage(){
+  const c=gar();
+  $('#gtabs').innerHTML=S.cars.map((x,i)=>x.modelo?`<button type="button" aria-pressed="${i===S.ai}" class="gtab${i===S.ai?' on':''}" data-ai="${i}">${miniCar(corDe(x)[0])}<span>${esc(M.MOD[x.modelo].n)}${x.ano?` <small>${x.ano}</small>`:''}</span></button>`:`<button type="button" class="gtab on" data-ai="${i}">${miniCar('#7b8189')}<span>Novo carro</span></button>`).join('')+(S.cars.length<4&&!S.cars.some(x=>!x.modelo)?`<button type="button" class="gtab add" id="gadd" aria-label="Adicionar carro" title="Adicionar carro">+</button>`:'');
+  $('#gtabs').hidden=!S.cars.length;
+  const st=$('#gstat');st.classList.toggle('on',!!c);st.textContent=c?'Conferindo peças':'Sem veículo';
+  $('#gname').textContent=c?cname(c):'escolher';
+  if(c){
+    const m=M.MOD[c.modelo],ge=geracao(c),n=contagem(c),kit=kitRevisao(c),tot=kit.reduce((s,[p,q])=>s+p.p*q,0),nk=kit.reduce((s,[,q])=>s+q,0);
+    const specs=[['ano','Ano',c.ano?String(c.ano):ge[0]+'–'+ge[1]],['motor','Motor',c.motor||'Todos'],['comb','Combustível',comb(c,ge)],['car','Carroceria',CARRO_N[m.car]||'—']];
+    const cats=Object.entries(n).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    $('#gview').innerHTML=`<div class="vrow"><div class="vtitle"><small>${esc(m.marcaN)}</small>${esc(m.n)}</div>${S.edit?'':`<div class="vbtns"><button class="ibtn" type="button" id="gedit" aria-label="Editar carro" title="Editar carro">${ico('edit')}</button><button class="ibtn" type="button" id="gdel" aria-label="Remover carro" title="Remover carro">${ico('del')}</button></div>`}</div>
+     <div class="vspecs">${specs.map(([k,l,v])=>`<div>${ico(k,18)}<span>${l}</span><b>${esc(v)}</b></div>`).join('')}</div>
+     <div class="glbl"><span>Peças que servem neste carro</span><button class="lnk sm" type="button" id="gall">Ver todas</button></div>
+     <div class="gcats">${cats.map(([k,q])=>`<button type="button" class="gcat" data-gc="${esc(k)}">${window.IconeCat(k)}<span>${esc(M.CATS[k].n)}<b>${q} ${q===1?'peça':'peças'}</b></span></button>`).join('')}</div>
+     ${kit.length?`<button class="gkit" type="button" id="gkit">${window.Icone('oleo')}<span class="gk1"><b>Kit revisão</b><small>Óleo e ${kit.length-1} filtros · ${nk} itens</small></span><span class="gk2"><b>${brl(tot)}</b><small>Adicionar ao carrinho</small></span></button>`:''}`;
+  }else $('#gview').innerHTML=`<p class="gempty">${S.cars.length?'Escolha marca e modelo do novo carro.':'Adicione seu carro para ver só as peças que servem nele e montar o kit de revisão.'}</p>`;
+  $('#gform').hidden=!!c&&!S.edit;
+  fillForm();drawCar()}
+function fillForm(){
+  const c=S.cars[S.ai]||{};const cur=c.modelo?M.MOD[c.modelo]:null;const b=cur?cur.marca:S.fmarca;
+  $('#gmarca').innerHTML='<option value="">Escolha</option>'+M.MODELOS.map(([k,n])=>`<option value="${esc(k)}"${b===k?' selected':''}>${esc(n)}</option>`).join('');
+  const ms=b?M.MODELOS.find(x=>x[0]===b)[2]:[];
+  $('#gmodelo').innerHTML='<option value="">'+(b?'Escolha':'Marca antes')+'</option>'+ms.map(([k,n])=>`<option value="${esc(k)}"${c.modelo===k?' selected':''}>${esc(n)}</option>`).join('');
+  let anos=[],mots=[];if(cur){const lo=Math.min(...cur.gens.map(g=>g[0])),hi=Math.max(...cur.gens.map(g=>g[1]));for(let y=hi;y>=lo;y--)anos.push(y);mots=[...new Set(cur.gens.filter(g=>!c.ano||(c.ano>=g[0]&&c.ano<=g[1])).flatMap(g=>g[2]))]}
+  $('#gano').innerHTML='<option value="">Todos</option>'+anos.map(y=>`<option${c.ano===y?' selected':''}>${y}</option>`).join('');
+  $('#gmotor').innerHTML='<option value="">Todos</option>'+mots.map(x=>`<option${c.motor===x?' selected':''}>${esc(x)}</option>`).join('');
+  $('#gano').disabled=$('#gmotor').disabled=!cur;$('#gok').disabled=!cur}
+function mudouCarro(){salvaCars();renderGarage();run()}
+const alvo=()=>{if(!S.cars[S.ai]){S.cars.push({modelo:null,ano:null,motor:null,cor:'prata'});S.ai=S.cars.length-1}return S.cars[S.ai]};
+$('#gmarca').onchange=()=>{S.fmarca=$('#gmarca').value;const c=alvo();c.modelo=null;c.ano=c.motor=null;mudouCarro()};
+$('#gmodelo').onchange=()=>{const c=alvo();c.modelo=$('#gmodelo').value||null;c.ano=c.motor=null;mudouCarro()};
+$('#gano').onchange=()=>{const c=alvo();c.ano=+$('#gano').value||null;const ge=c.modelo&&M.MOD[c.modelo].gens.filter(g=>!c.ano||(c.ano>=g[0]&&c.ano<=g[1])).flatMap(g=>g[2]);if(c.motor&&ge&&!ge.includes(c.motor))c.motor=null;mudouCarro()};
+$('#gmotor').onchange=()=>{alvo().motor=$('#gmotor').value||null;mudouCarro()};
+$('#gok').onclick=()=>{S.edit=false;renderGarage()};
+$('#garage').addEventListener('click',e=>{
+  const tab=e.target.closest('[data-ai]');if(tab){S.cars=S.cars.filter((x,i)=>x.modelo||i===+tab.dataset.ai);S.ai=Math.min(+tab.dataset.ai,S.cars.length-1);S.edit=!S.cars[S.ai].modelo;mudouCarro();return}
+  if(e.target.closest('#gadd')){const used=S.cars.map(x=>x.cor);const cor=Object.keys(CORES).find(k=>!used.includes(k))||'prata';S.cars.push({modelo:null,ano:null,motor:null,cor});S.ai=S.cars.length-1;S.fmarca='';S.edit=true;mudouCarro();$('#gmarca').focus();return}
+  if(e.target.closest('#gedit')){S.edit=true;renderGarage();$('#gmodelo').focus();return}
+  if(e.target.closest('#gdel')){S.cars.splice(S.ai,1);S.ai=0;S.edit=!S.cars.length;mudouCarro();return}
+  if(e.target.closest('#gall')){S.cats.clear();S.q='';$('#q').value='';run();$('.main').scrollIntoView({behavior:'smooth'});return}
+  const cor=e.target.closest('[data-cor]');if(cor){const c=gar();if(c){c.cor=cor.dataset.cor;salvaCars();renderGarage()}return}
+  const gc=e.target.closest('[data-gc]');if(gc){S.cats=new Set([gc.dataset.gc]);S.q='';$('#q').value='';run();$('.main').scrollIntoView({behavior:'smooth'});return}
+  if(e.target.closest('#gkit')){const c=gar();const kit=kitRevisao(c);kit.forEach(([p,q])=>{for(let i=0;i<q;i++)S.cart.push(p.id)});store.set('rp_cart',S.cart);$('#ccount').textContent=S.cart.length;openCart();toast('Kit revisão do '+cname(c)+' no carrinho')}
+});
+$('#gchip').onclick=()=>{$('#garage').scrollIntoView({behavior:'smooth',block:'center'})};
+/* ---------- Mais buscadas: vem das buscas feitas ----------
+   Aqui fica no navegador. Com o banco, troque por fonte.registrarBusca -> SELECT registrar_busca(q, n)
+   e fonte.maisBuscadas -> SELECT * FROM mais_buscadas(30, 6), que junta as buscas de todos. */
+const EXEMPLOS=['pastilha de freio onix 2019','filtro de óleo hb20','bateria gol','amortecedor dianteiro argo'];
+const chaveBusca=q=>M.norm(q).replace(/\s+/g,' ').trim();
+let ultimaReg='';
+async function registrar(q){
+  const k=chaveBusca(q);if(!S.last||k===ultimaReg||k.length<3)return;
+  const n=filtered().length;if(!n)return;ultimaReg=k;await window.fonte.registrarBusca(q,n);renderPop()}
+async function renderPop(){
+  const l=await window.fonte.maisBuscadas(6);
+  $('#pop').innerHTML=l.length?`<span>Mais buscadas:</span>${l.map(x=>`<button type="button" data-q="${esc(x.q)}">${esc(x.q)}<i>${x.n}×</i></button>`).join('')}`
+    :`<span>Experimente:</span>${EXEMPLOS.map(q=>`<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}`}
+function veioDaFrase(v){
+  let i=S.cars.findIndex(c=>c.modelo===v.modelo);
+  if(i<0){const p=S.cars.findIndex(c=>!c.modelo);if(p>=0)i=p;else{if(S.cars.length>=4)S.cars.splice(S.ai===0?1:0,1);const used=S.cars.map(x=>x.cor);S.cars.push({modelo:null,ano:null,motor:null,cor:Object.keys(CORES).find(k=>!used.includes(k))||'prata'});i=S.cars.length-1}}
+  const c=S.cars[i];if(c.modelo!==v.modelo){c.modelo=v.modelo;c.ano=null;c.motor=null}if(v.ano)c.ano=v.ano;if(v.motor){const ok=M.MOD[c.modelo].gens.flatMap(g=>g[2]).find(x=>x===v.motor);if(ok)c.motor=ok}
+  S.ai=i;S.edit=false;salvaCars();renderGarage()}
+const vname=v=>v&&v.modelo?M.MOD[v.modelo].n+(v.ano?' '+v.ano:'')+(v.motor?' '+v.motor:''):'';
+const FIT={ok:['ok','✓ Serve no seu carro'],no:['no','Não serve no seu carro'],un:['un','Universal'],'?':['un','Escolha o veículo']};
+let nBusca=0;
+async function run(){
+  if(!S.ok)return;const n=++nBusca;
+  const r=await window.fonte.buscar(S.q,gar());if(n!==nBusca)return;
+  S.last=r;S.show=12;const it=r.interp;const v=it.veiculo;const g=gar();const t=[];
+  if(v){t.push(`<span class="tag"><i>Veículo</i>${esc(vname(v))}</span>`);
+    if(v.fonte==='frase'&&(!g||g.modelo!==v.modelo||(v.ano&&v.ano!==g.ano)||(v.motor&&v.motor!==g.motor)))t.push('<button type="button" class="tag salvar" id="salvarv">+ Salvar na garagem</button>')}
+  it.codigos.forEach(c=>t.push(`<span class="tag"><i>Código</i>RP-${esc(c)}</span>`));
+  it.correcoes.forEach(([a,b])=>t.push(`<span class="tag"><i>Corrigido</i>${esc(a)} → ${esc(b)}</span>`));
+  $('#und').innerHTML=t.join('');
+  document.querySelectorAll('.cat').forEach(b=>b.classList.toggle('on',S.cats.has(b.dataset.cat)));
+  renderList()}
+function filtered(){
+  let rs=S.last.resultados.filter(x=>(!S.cats.size||S.cats.has(x.p.c))&&(!S.mars.size||S.mars.has(x.p.m))&&x.p.p<=S.pmax&&(!S.comp||x.fit!=='no')&&(!S.est||x.p.estoque>0));
+  if(S.ord==='pmin')rs=[...rs].sort((a,b)=>a.p.p-b.p.p);if(S.ord==='pmax')rs=[...rs].sort((a,b)=>b.p.p-a.p.p);if(S.ord==='nome')rs=[...rs].sort((a,b)=>a.p.n.localeCompare(b.p.n,'pt'));return rs}
+const stockTxt=e=>e?(e<4?['low','Últimas '+e+' unidades']:['','Em estoque']):['low','Indisponível no momento'];
+function renderList(){
+  if(!S.last)return;const it=S.last.interp;const all=S.last.resultados;
+  const cc={},mc={};all.filter(x=>(!S.comp||x.fit!=='no')&&(!S.est||x.p.estoque>0)).forEach(x=>{cc[x.p.c]=(cc[x.p.c]||0)+1;mc[x.p.m]=(mc[x.p.m]||0)+1});
+  $('#fmar').innerHTML=Object.keys(mc).sort().map(m=>`<label class="ck"><input type="checkbox" data-m="${esc(m)}"${S.mars.has(m)?' checked':''}>${esc(m)}<small>${mc[m]}</small></label>`).join('')||'<p class="note">Nenhum.</p>';
+  const rs=filtered();const q=S.q.trim();
+  $('#rtitle').textContent=rs.length?(rs.length+(rs.length===1?' peça':' peças')+(it.veiculo?' para '+vname(it.veiculo):'')):'Nenhuma peça encontrada';
+  $('#rsub').textContent=(q?'Busca: "'+q+'"':S.cats.size?'Categoria: '+[...S.cats].map(c=>M.CATS[c].n).join(', '):'Catálogo completo')+(it.veiculo&&S.comp?(()=>{const n=all.filter(x=>x.fit==='no').length;return n?' · '+n+' que não servem neste carro estão ocultas':''})():'');
+  $('#grid').innerHTML=rs.length?rs.slice(0,S.show).map(x=>{const[fc,ft]=FIT[x.fit];const[sc,st]=stockTxt(x.p.estoque);return`<article class="card" tabindex="0" data-id="${esc(x.p.id)}">
+    <div class="thumb"><span class="badge ${fc}">${esc(ft)}</span>${Pic(x.p)}</div>
+    <div class="cbody"><h3>${esc(x.p.n)}</h3><div class="meta"><b>${esc(x.p.m)}</b> · cód. ${esc(x.p.id)}</div><div class="meta">${servem(x.p)}</div>
+    <div class="stock ${sc}">${esc(st)}</div>
+    <div class="buy"><span class="price">${brl(x.p.p)}<span class="inst">ou 3x de ${brl(x.p.p/3)}</span></span><button class="add" type="button" data-add="${esc(x.p.id)}" aria-label="Adicionar ${esc(x.p.n)} ao carrinho"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11h11l2-8H6.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/><path d="M13 8v5M10.5 10.5h5" stroke="currentColor" stroke-width="2"/></svg></button></div></div></article>`}).join(''):
+    `<div class="empty"><h3>Não achamos essa peça</h3><p>Confira a grafia, tente só o nome da peça (por exemplo "pastilha" ou "filtro de ar") ou tire os filtros.</p><button class="addw" style="padding:0 20px" type="button" id="reset">Ver todas as peças</button></div>`;
+  $('#more').hidden=rs.length<=S.show;$('#more').textContent='Mostrar mais '+Math.min(12,rs.length-S.show)+' de '+(rs.length-S.show)}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
+const byId=id=>M.PECAS.find(x=>x.id===id);
+function addCart(id){
+  const p=byId(id);if(!p||!p.estoque){toast('Peça indisponível no momento');return}
+  if(S.cart.filter(x=>x===id).length>=p.estoque){toast('Quantidade máxima em estoque');return}
+  S.cart.push(id);guardaCart();window.fonte.evento('carrinho',id,S.q);toast(p.n+' foi para o carrinho')}
+function openP(id){window.fonte.evento('abriu',id,S.q);if(S.q.trim())registrar(S.q);
+  const p=byId(id);if(!p)return;const v=S.last&&S.last.interp.veiculo;const[fc,ft]=FIT[M.fitOf(p,v)];
+  const rows=p.fit==='*'?'<tr><td>Serve na maioria dos carros</td><td>—</td></tr>':p.fit.map(f=>`<tr class="${v&&v.modelo===f[0]?'hl':''}"><td>${esc(M.MOD[f[0]].marcaN+' '+M.MOD[f[0]].n)}<div class="meta">${esc(f[3].join(', '))}</div></td><td>${f[1]}–${f[2]}</td></tr>`).join('');
+  const[sc,st]=stockTxt(p.estoque);
+  $('#dpanel').innerHTML=`<button class="x" type="button" data-close>Fechar</button><div class="thumb"><span class="badge ${fc}">${esc(ft)}${v&&fc!=='un'?' · '+esc(vname(v)):''}</span>${Pic(p)}</div>
+   <h2 id="dtitle">${esc(p.n)}</h2><div class="meta">${esc(p.m)} · ${esc(p.tipo)} · cód. ${esc(p.id)}</div>
+   <div class="buy"><span class="price" style="font-size:38px">${brl(p.p)}<span class="inst">ou 3x de ${brl(p.p/3)}</span></span><span class="stock ${sc}">${esc(st)}</span></div>
+   <p style="margin:0">${esc(p.d)}</p>
+   <button class="addw" type="button" data-add="${esc(p.id)}">Adicionar ao carrinho</button>
+   <div><b>Carros em que serve</b><table class="ftab">${rows}</table></div>`;
+  openD()}
+function openCart(){
+  const items={};S.cart.forEach(id=>items[id]=(items[id]||0)+1);let tot=0;
+  const rows=Object.entries(items).map(([id,n])=>{const p=byId(id);if(!p)return'';tot+=p.p*n;return`<div class="ci">${Pic(p)}<div><b>${esc(p.n)}</b><div class="meta">${esc(p.m)} · ${brl(p.p)}</div><div class="qty"><button type="button" data-qtd="${esc(id)}" data-d="-1" aria-label="Diminuir">−</button><span>${n}</span><button type="button" data-qtd="${esc(id)}" data-d="1" aria-label="Aumentar">+</button><button type="button" data-rm="${esc(id)}">Remover</button></div></div><span class="price" style="font-size:20px">${brl(p.p*n)}</span></div>`}).join('');
+  $('#dpanel').innerHTML=`<button class="x" type="button" data-close>Fechar</button><h2 id="dtitle">Seu carrinho</h2>${rows?`<div class="cartl">${rows}</div><div class="tot"><span>Total</span><span>${brl(tot)}</span></div><button class="addw" type="button" id="fin">Finalizar pedido</button><p class="note">Retirada na loja, pagamento no balcão.</p>`:'<p>O carrinho está vazio.</p>'}`;openD()}
+function openD(){$('#drawer').classList.add('on');$('#dpanel [data-close]').focus()}
+const closeD=()=>$('#drawer').classList.remove('on');
+$('#drawer').addEventListener('click',async e=>{
+  if(e.target.id==='drawer'||e.target.closest('[data-close]'))return closeD();
+  const a=e.target.closest('[data-add]');if(a){addCart(a.dataset.add);closeD();return}
+  const q=e.target.closest('[data-qtd]');
+  if(q){const id=q.dataset.qtd,p=byId(id);if(+q.dataset.d>0){if(S.cart.filter(x=>x===id).length<p.estoque)S.cart.push(id);else toast('Quantidade máxima em estoque')}else{const i=S.cart.indexOf(id);if(i>-1)S.cart.splice(i,1)}guardaCart();openCart();return}
+  const rm=e.target.closest('[data-rm]');if(rm){S.cart=S.cart.filter(x=>x!==rm.dataset.rm);guardaCart();openCart();return}
+  if(e.target.closest('#lok')){
+    const em=$('#lemail').value.trim();
+    if(!/^\S+@\S+\.\S+$/.test(em)){toast('Digite um e-mail válido');return}
+    try{const c=await window.fonte.entrar(em);aplicaCliente(c);closeD();toast('Olá, '+c.nome.split(' ')[0])}catch(err){toast('Não foi possível entrar agora')}
+    return}
+  if(e.target.closest('#sair')){CLI=null;window.fonte.cliente=null;store.set('rp_cli',null);$('#login .lb').textContent='Entrar';closeD();return}
+  if(e.target.closest('#fin')){
+    if(!CLI){openLogin('Entre para finalizar o pedido.');return}
+    const it={};S.cart.forEach(id=>it[id]=(it[id]||0)+1);
+    try{
+      const r=await window.fonte.pedido(CLI.id,Object.entries(it).map(([codigo,qtd])=>({codigo,qtd})));
+      S.cart=[];guardaCart();
+      aplicaCliente(await window.fonte.entrar(CLI.email),true);
+      await window.fonte.carregar();run();
+      $('#dpanel').innerHTML=`<button class="x" type="button" data-close>Fechar</button><h2 id="dtitle">Pedido #${r.id} recebido</h2><p>Total ${brl(r.total)}. Avisaremos quando estiver pronto para retirada na loja.</p>`;openD()
+    }catch(err){
+      toast('Alguma peça acabou de ficar sem estoque. Revise o carrinho.');
+      await window.fonte.carregar();run();openCart()}}
+});
+$('#cartb').onclick=openCart;
+$('#grid').addEventListener('click',e=>{const a=e.target.closest('[data-add]');if(a){addCart(a.dataset.add);return}if(e.target.id==='reset'){resetAll();return}const c=e.target.closest('.card');if(c)openP(c.dataset.id)});
+$('#grid').addEventListener('keydown',e=>{const c=e.target.closest('.card');if(c&&e.key==='Enter'&&e.target===c)openP(c.dataset.id)});
+$('#more').onclick=()=>{S.show+=12;renderList()};
+$('#fmar').addEventListener('change',e=>{const m=e.target.dataset.m;if(!m)return;e.target.checked?S.mars.add(m):S.mars.delete(m);renderList()});
+$('#fcomp').onchange=e=>{S.comp=e.target.checked;renderList()};
+$('#fest').onchange=e=>{S.est=e.target.checked;renderList()};
+const setP=v=>{S.pmax=v;$('#fprice').value=v;$('#pval').textContent=brl(v)};
+setP(1500);$('#fprice').oninput=e=>{setP(+e.target.value);renderList()};
+$('#ford').onchange=e=>{S.ord=e.target.value;renderList()};
+function clearF(){S.cats.clear();S.mars.clear();S.est=false;$('#fest').checked=false;setP(1500)}
+function resetAll(){clearF();S.q='';$('#q').value='';run()}
+$('#clrf').onclick=()=>{clearF();run()};
+$('#mobf').onclick=e=>{const o=$('#flt').classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',o)};
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(!b)return;const k=b.dataset.cat;if(S.cats.size===1&&S.cats.has(k))S.cats.clear();else S.cats=new Set([k]);S.q='';$('#q').value='';run();$('.main').scrollIntoView({behavior:'smooth'})});
+const ac=$('#ac'),qi=$('#q');
+function hl(txt,q){const n=M.norm(txt),i=n.indexOf(M.norm(q));return i<0||!q?esc(txt):esc(txt.slice(0,i))+'<mark>'+esc(txt.slice(i,i+q.length))+'</mark>'+esc(txt.slice(i+q.length))}
+const carIc='<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M12 62l8-20a8 8 0 0 1 7-5h42a8 8 0 0 1 7 5l8 20v12H12z" fill="#ff6a2b"/><path d="M26 44h44l5 14H21z" fill="#c3d3df"/><circle cx="28" cy="74" r="9" fill="#2b3037"/><circle cx="68" cy="74" r="9" fill="#2b3037"/></svg>';
+let hAc;
+function showAc(){
+  if(!S.ok)return;const v=qi.value;const sg=M.sugerir(v);pintaAc(sg,[]);
+  clearTimeout(hAc);
+  if(v.trim().length>=2)hAc=setTimeout(async()=>{
+    const r=await window.fonte.buscar(v,gar(),3);
+    if(qi.value===v&&document.activeElement===qi)pintaAc(sg,r.resultados.slice(0,3))},260)}
+function pintaAc(sg,r){
+  const last=qi.value.trim().split(/\s+/).pop()||'';
+  S.acL=[];let h='';const grp=(t,arr,f)=>{if(!arr.length)return;h+=`<div class="grp">${t}</div>`;arr.forEach(x=>{S.acL.push(x);h+=f(x,S.acL.length-1)})};
+  grp('Tipos de peça',sg.filter(s=>s.k==='tipo'),(s,i)=>`<button type="button" role="option" data-i="${i}">${Ic(s.tipo)}<span>${hl(s.txt,last)}</span></button>`);
+  grp('Veículos',sg.filter(s=>s.k==='carro'),(s,i)=>`<button type="button" role="option" data-i="${i}">${carIc}<span>${hl(s.txt,last)}</span><small>${esc(s.sub)}</small></button>`);
+  grp('Categorias',sg.filter(s=>s.k==='cat'),(s,i)=>`<button type="button" role="option" data-i="${i}">${window.IconeCat(s.cat)}<span>${hl(s.txt,last)}</span></button>`);
+  grp('Produtos',r.map(x=>({k:'prod',id:x.p.id,txt:x.p.n,sub:brl(x.p.p),t:x.p.t,m:x.p.m})),(s,i)=>`<button type="button" role="option" data-i="${i}">${Ic(s.t)}<span>${esc(s.txt)} <small>${esc(s.m)}</small></span><small>${esc(s.sub)}</small></button>`);
+  ac.innerHTML=h;S.acI=-1;const on=!!h&&document.activeElement===qi;ac.classList.toggle('on',on);qi.setAttribute('aria-expanded',on)}
+function pick(s){
+  ac.classList.remove('on');qi.setAttribute('aria-expanded','false');
+  if(s.k==='prod'){openP(s.id);return}
+  if(s.k==='cat'){S.cats=new Set([s.cat]);S.q='';qi.value='';run();return}
+  const words=qi.value.trim().split(/\s+/);words.pop();
+  words.push(s.k==='carro'?M.MOD[s.mod].n.toLowerCase():s.txt.toLowerCase());
+  qi.value=words.join(' ')+' ';S.q=qi.value;qi.focus();run()}
+let h;qi.value=S.q;
+let hr;qi.addEventListener('input',()=>{S.q=qi.value;showAc();clearTimeout(h);h=setTimeout(run,180);clearTimeout(hr);const q=qi.value;hr=setTimeout(()=>{if(qi.value===q)registrar(q)},2500)});
+qi.addEventListener('focus',showAc);
+qi.addEventListener('blur',()=>setTimeout(()=>{ac.classList.remove('on');qi.setAttribute('aria-expanded','false')},150));
+qi.addEventListener('keydown',e=>{if(!ac.classList.contains('on'))return;const bs=[...ac.querySelectorAll('button')];if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();S.acI=(S.acI+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length;bs.forEach((b,i)=>b.classList.toggle('sel',i===S.acI))}else if(e.key==='Enter'&&S.acI>=0){e.preventDefault();pick(S.acL[S.acI])}else if(e.key==='Escape')ac.classList.remove('on')});
+ac.addEventListener('mousedown',e=>{const b=e.target.closest('[data-i]');if(b){e.preventDefault();pick(S.acL[+b.dataset.i])}});
+$('#sb').addEventListener('submit',async e=>{e.preventDefault();ac.classList.remove('on');S.q=qi.value;await run();registrar(S.q);$('.main').scrollIntoView({behavior:'smooth'})});
+$('#pop').addEventListener('click',async e=>{if(e.target.closest('#plimpa')){store.set('rp_buscas',{});ultimaReg='';renderPop();return}const b=e.target.closest('[data-q]');if(!b)return;S.q=b.dataset.q;qi.value=S.q;S.cats.clear();await run();registrar(S.q)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeD()});
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText($('#'+b.dataset.copy).textContent);b.textContent='Copiado'}catch(e){b.textContent='Selecione e copie'}setTimeout(()=>b.textContent='Copiar',1600)});
+$('#ccount').textContent=S.cart.length;
+window.fonte.carregar().then(async()=>{
+  S.ok=true;
+  if(CLI){try{aplicaCliente(await window.fonte.entrar(CLI.email),true)}catch(e){}$('#login .lb').textContent=CLI.nome.split(' ')[0]}
+  const cnt={};M.PECAS.forEach(p=>cnt[p.c]=(cnt[p.c]||0)+1);
+  $('#rail').innerHTML=Object.entries(M.CATS).map(([k,c])=>`<button class="cat" type="button" data-cat="${esc(k)}"><span class="ic">${window.IconeCat(k)}</span><b>${esc(c.n)}</b><small>${cnt[k]||0} itens</small></button>`).join('');
+  renderGarage();renderPop();run()
+}).catch(()=>{$('#rtitle').textContent='Não foi possível carregar o catálogo';$('#grid').innerHTML='<div class="empty"><h3>Catálogo indisponível</h3><p>Não foi possível falar com o servidor.</p></div>'});
+}
+</script>
+</body>
+</html>
